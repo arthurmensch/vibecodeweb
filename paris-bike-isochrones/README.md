@@ -5,7 +5,7 @@ Isochrones (reachable-area contours) by **bike** from **92 rue des Poissonniers,
 
 ## Files
 
-- `isochrones_bike_92_rue_des_poissonniers.png` — static map, 3080×2860 px, on a real basemap (CARTO Voyager / OSM raster tiles, zoom 14) with labeled 5–30 min contours, landmarks, scale bar, north arrow
+- `isochrones_bike_92_rue_des_poissonniers.png` — static map, 3080×2860 px, on a real basemap (OpenStreetMap raster tiles, zoom 14 (no API key)) with labeled 5–30 min contours, landmarks, scale bar, north arrow
 - `isochrones_bike_92_rue_des_poissonniers.html` — interactive map, **fully self-contained** (basemap embedded as base64 image + SVG isochrone overlay; no external requests, no API key). Wheel = zoom, drag = pan. Open the file directly in any browser
 - `isochrones_bike_92_rue_des_poissonniers.geojson` — isochrone polygons (`properties.minutes`, `properties.area_km2`)
 - `summary.json` — area per travel time
