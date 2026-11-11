@@ -39,8 +39,15 @@ tx1, ty1 = int(px1f // 256), int(py0f // 256)
 W, H = (tx1 - tx0 + 1) * 256, (ty1 - ty0 + 1) * 256
 print(f"tiles {tx1-tx0+1}x{ty1-ty0+1} = {(tx1-tx0+1)*(ty1-ty0+1)}, canvas {W}x{H}px at z{Z}")
 
-TILES = ["https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-         "https://tile.openstreetmap.org/{z}/{x}/{y}.png"]
+TILES = ["https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"]
+
+def good_tile(data):
+    if len(data) < 8000:
+        return False
+    a = np.asarray(Image.open(io.BytesIO(data)).convert("RGB"))
+    return a.std() > 8  # watermark/error tiles are near-uniform
+
 canvas = Image.new("RGB", (W, H), (240, 240, 240))
 ok = fail = 0
 for tx in range(tx0, tx1 + 1):
@@ -51,7 +58,10 @@ for tx in range(tx0, tx1 + 1):
                 req = urllib.request.Request(t.format(z=Z, x=tx, y=ty),
                                              headers={"User-Agent": "vibe-isochrone-map/1.0 (one-off static map render)"})
                 with urllib.request.urlopen(req, timeout=30) as r:
-                    img = Image.open(io.BytesIO(r.read())).convert("RGB")
+                    data = r.read()
+                if not good_tile(data):
+                    raise ValueError("watermark/error tile")
+                img = Image.open(io.BytesIO(data)).convert("RGB")
                 canvas.paste(img, ((tx - tx0) * 256, (ty - ty0) * 256))
                 got = True
                 ok += 1
@@ -61,7 +71,7 @@ for tx in range(tx0, tx1 + 1):
         if not got:
             fail += 1
             print("tile fail", tx, ty, last)
-        time.sleep(0.12)
+        time.sleep(0.3)
 print("tiles ok/fail:", ok, fail)
 crop = canvas.crop((int(px0f) - tx0 * 256, int(py1f) - ty0 * 256, int(px1f) - tx0 * 256, int(py0f) - ty0 * 256))
 print("cropped:", crop.size)
@@ -106,7 +116,7 @@ ax.set_xticks([]); ax.set_yticks([])
 for s in ax.spines.values(): s.set_visible(False)
 ax.set_title("Isochrones vélo depuis 92 rue des Poissonniers, Paris 18e\n5–30 min à vélo (OSRM profil vélo / OpenStreetMap)",
              fontsize=17, fontweight="bold")
-ax.text(0.995, 0.005, "Fond de carte © OpenStreetMap contributors, © CARTO · temps: OSRM vélo",
+ax.text(0.995, 0.005, "Fond de carte © OpenStreetMap contributors · temps: OSRM vélo",
         transform=ax.transAxes, ha="right", fontsize=9, color="#555",
         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.75))
 fig.tight_layout()
